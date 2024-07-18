@@ -4,12 +4,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.ArrayList;
 
 public class GamePanel extends JPanel implements ActionListener, KeyListener {
     private static final int CELL_SIZE = 20; // Kích thước của mỗi ô vuông trong game
     private static final int WIDTH = 20; // Số lượng ô vuông theo chiều ngang
     private static final int HEIGHT = 20; // Số lượng ô vuông theo chiều dọc
+    private static final Color GAME_AREA_COLOR = Color.BLACK; // Màu nền của vùng chơi game
+    private static final Color BORDER_COLOR = Color.BLUE; // Màu của khung viền
 
     private Snake snake;
     private Apple apple;
@@ -21,8 +22,28 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH * CELL_SIZE, HEIGHT * CELL_SIZE));
-        setBackground(Color.BLACK);
         setLayout(new BorderLayout()); // Sử dụng BorderLayout để đặt các thành phần
+
+        JPanel gameArea = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+
+                // Vẽ rắn
+                g.setColor(Color.GREEN);
+                for (Point bodyPart : snake.getBody()) {
+                    g.fillRect(bodyPart.x * CELL_SIZE, bodyPart.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+
+                // Vẽ quả táo
+                g.setColor(Color.RED);
+                int appleX = apple.getPosition().x * CELL_SIZE;
+                int appleY = apple.getPosition().y * CELL_SIZE;
+                g.fillOval(appleX + 1, appleY + 1, CELL_SIZE - 2, CELL_SIZE - 2); // Đảm bảo quả táo nằm trong ô vuông
+            }
+        };
+        gameArea.setPreferredSize(new Dimension(WIDTH * CELL_SIZE, HEIGHT * CELL_SIZE));
+        gameArea.setBackground(GAME_AREA_COLOR);
 
         snake = new Snake();
         apple = new Apple(new Point(5, 5)); // Vị trí ban đầu của quả táo
@@ -41,12 +62,14 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         scoreLabel.setForeground(Color.WHITE); // Màu chữ của điểm số
         scoreLabel.setFont(new Font("Arial", Font.BOLD, 18)); // Phông chữ và kích thước chữ
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setBackground(Color.BLACK); // Đặt nền cho panel
-        buttonPanel.add(startButton);
-        buttonPanel.add(scoreLabel); // Thêm label điểm số vào panel
+        JPanel controlsPanel = new JPanel();
+        controlsPanel.setBackground(GAME_AREA_COLOR); // Đặt nền cho panel
+        controlsPanel.add(startButton);
+        controlsPanel.add(scoreLabel); // Thêm label điểm số vào panel
 
-        add(buttonPanel, BorderLayout.SOUTH);
+        add(gameArea, BorderLayout.CENTER);
+        add(controlsPanel, BorderLayout.SOUTH);
+
         addKeyListener(this);
     }
 
@@ -62,26 +85,10 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // Vẽ tường bao quanh màn hình chơi
-        g.setColor(Color.BLUE); // Sử dụng màu xanh dương
-        g.fillRect(0, 0, WIDTH * CELL_SIZE, CELL_SIZE); // Top wall
-        g.fillRect(0, HEIGHT * CELL_SIZE - CELL_SIZE, WIDTH * CELL_SIZE, CELL_SIZE); // Bottom wall
-        g.fillRect(0, 0, CELL_SIZE, HEIGHT * CELL_SIZE); // Left wall
-        g.fillRect(WIDTH * CELL_SIZE - CELL_SIZE, 0, CELL_SIZE, HEIGHT * CELL_SIZE); // Right wall
-
-        // Vẽ rắn
-        g.setColor(Color.GREEN);
-        for (Point bodyPart : snake.getBody()) {
-            g.fillRect(bodyPart.x * CELL_SIZE, bodyPart.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        }
-
-        // Vẽ quả táo
-        g.setColor(Color.RED);
-        int appleX = apple.getPosition().x * CELL_SIZE;
-        int appleY = apple.getPosition().y * CELL_SIZE;
-        g.fillOval(appleX + 1, appleY + 1, CELL_SIZE - 2, CELL_SIZE - 2); // Đảm bảo quả táo nằm trong ô vuông
+        // Vẽ khung chơi game
+        g.setColor(BORDER_COLOR);
+        g.drawRect(0, 0, WIDTH * CELL_SIZE - 1, HEIGHT * CELL_SIZE - 1);
     }
-
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -176,7 +183,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             JFrame frame = new JFrame("Snake Game");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setResizable(false);
-            frame.add(new GamePanel(), BorderLayout.CENTER);
+            frame.add(new GamePanel());
             frame.pack();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
